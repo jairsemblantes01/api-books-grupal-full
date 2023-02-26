@@ -1,7 +1,10 @@
 plugins {
     id 'java'
+    id 'application'
     id 'org.springframework.boot' version '3.0.3'
     id 'io.spring.dependency-management' version '1.1.0'
+
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 group = 'com.distribuida'
@@ -40,6 +43,6 @@ tasks.withType(JavaCompile) {
     options.annotationProcessorPath = configurations.annotationProcessor
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+mainClassName = 'com.distribuida.Servidor'
+
+
