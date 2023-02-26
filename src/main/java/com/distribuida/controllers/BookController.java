@@ -26,7 +26,7 @@ public class BookController {
 	@GetMapping("/{id}")
 	public BookDto findById(@PathVariable("id") String id) {
 		System.out.println(id);
-		return bookService.findById(id).get();
+		return bookService.findById(id).isPresent() ? bookService.findById(id).get() : null;
 	}
 	@PostMapping("")
 	public  ResponseEntity<?> insert(@RequestBody Book book) {
