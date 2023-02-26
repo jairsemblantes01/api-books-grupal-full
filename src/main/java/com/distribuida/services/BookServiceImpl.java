@@ -1,10 +1,14 @@
 package com.distribuida.services;
 
+import com.distribuida.author.AuthorConection;
 import com.distribuida.author.AuthorsCliente;
 import com.distribuida.db.Book;
 import com.distribuida.dto.BookDto;
 import com.distribuida.repository.BookRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,56 +25,28 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class BookServiceImpl implements BookService {
-String urlAuthor = "http://localhost:3002/authors";
 
- public BookServiceImpl() {
-		Map<String, String> env = System.getenv();
-		for (String envName : env.keySet()) {
-			if (envName.equals("URL_AUTHOR")) {
-				urlAuthor = env.get(envName);
-			}
-		}
-		System.out.println("URL_AUTHOR**********: " + urlAuthor);
-	}
-CloseableHttpClient httpclient = HttpClients.createDefault();
+
 	@Autowired
 	private BookRepository bookRepository;
-	
-	public AuthorsCliente getAuthor(Integer id) {
-		try {
-			HttpGet httpGet = new HttpGet(urlAuthor + "/" + id);
-			var response = httpclient.execute(httpGet);
-			HttpEntity entity = response.getEntity();
-			System.out.println(entity);
-			ObjectMapper obtectMapper = new ObjectMapper();
-			AuthorsCliente auu = obtectMapper.readValue(EntityUtils.toString(entity), AuthorsCliente.class);
-			return auu;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+	@Autowired
+	AuthorConection authorConection;
 	
 	@Override
 	public List<BookDto> findAll() {
 		List<Book> books = bookRepository.findAll();
 		List<BookDto> ret = books.stream().map(book -> {
-			AuthorsCliente author = this.getAuthor(book.getAuthor());
-			if (author == null) {
-				author = new AuthorsCliente(
-						0,
-						"Sin nombre",
-						"Sin apellido"
-				);
-			}
+			String nameAuthor = authorConection.getAuthor(book.getAuthor());
 			return new BookDto(
 					book.getId(),
 					book.getIsbn(),
 							book.getTitle(),
 							book.getAuthor(),
 							book.getPrice(),
-							String.format("%s, %s", author.getLastName(), author.getFirstName())
+							nameAuthor
 			);
 		}).collect(Collectors.toList());
 		
@@ -83,22 +59,14 @@ CloseableHttpClient httpclient = HttpClients.createDefault();
 		if (book.isEmpty()) {
 			return Optional.empty();
 		} else {
-			AuthorsCliente author = this.getAuthor(book.get().getAuthor());
-			if (author == null) {
-				author = new AuthorsCliente(
-						0,
-						"Sin nombre",
-						"Sin apellido"
-				);
-			}
+			String nameAuthor = authorConection.getAuthor(book.get().getAuthor());
 			BookDto ret = new BookDto(
 					book.get().getId(),
 					book.get().getIsbn(),
 					book.get().getTitle(),
 					book.get().getAuthor(),
 					book.get().getPrice(),
-					String.format("%s, %s", author.getLastName(), author.getFirstName())
-			);
+							nameAuthor);
 			return Optional.of(ret);
 		}
 	}
