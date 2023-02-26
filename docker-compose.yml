@@ -10,9 +10,9 @@ services:
       replicas: 1
     environment:
       SERVER_PORT: 8081
-      MONGODB_HOST: mongodb-service
-      MONGODB_PORT: 27017
-      MONGODB_DATABASE: books
+      SPRING_DATA_MONGODB_HOST: mongodb-service
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: books
       #APi de autores
       URL_AUTHOR: http://author-service:8082
     ports:
