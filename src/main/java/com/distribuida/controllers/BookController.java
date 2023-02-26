@@ -40,7 +40,7 @@ public class BookController {
 		bookService.update(book);
 	}
 	@DeleteMapping("/{id}")
-	public void delete(String id) {
+	public void delete(@PathVariable("id") String id) {
 		bookService.delete(id);
 	}
 
