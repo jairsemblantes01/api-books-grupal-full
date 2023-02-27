@@ -5,7 +5,7 @@ services:
     ports:
       - "27017:27017"
   books-grupal:
-    image: "Nombre de la imagen"
+    image: "books-grupal"
     deploy:
       replicas: 1
     environment:
@@ -14,6 +14,6 @@ services:
       SPRING_DATA_MONGODB_PORT: 27017
       SPRING_DATA_MONGODB_DATABASE: books
       #APi de autores
-      URL_AUTHOR: http://author-service:8082
+      URL_AUTHOR: http://localhost:8082/authors
     ports:
       - "8081:8081"
