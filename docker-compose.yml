@@ -1,15 +1,66 @@
-version: '3'
+version: "3.8"
 services:
-  api-libros:
-    image: books-grupal-s
+  authors-service:
+    # build: ./app
+    image: cfeliot/app-author_py:1
+    volumes:
+      - .:/app
     environment:
-      SERVER_PORT: 8081
-      spring.data.mongodb.host: mongodb-service
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/distribuida
+      - SERVER_PORT=8080
+    depends_on:
+      - db
+    labels:
+      - "traefik.http.routers.authors.rule=PathPrefix(`/app2`)"
+      - "traefik.http.middlewares.authors.stripprefix.prefixes=/app2"
+      - "traefik.http.routers.authors.middlewares=authors"
+    expose:
+      - 8080
+  db:
+    image: arm64v8/postgres
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=distribuida
+  proxy:
+    image: traefik:v2.9.6
+    command: --api.insecure=true --providers.docker
     ports:
-      - "8081:8081"
+      - "80:80"
+      - "8080:8080"
+    expose:
+      - 80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  tracing:
+    image: jaegertracing/all-in-one
+    ports:
+      - "16686:16686"
+      - "14250:14250"
+  books-service:
+    image: books-grupal
+    environment:
+      SERVER_PORT: 7071
+      spring.data.mongodb.host: mongodb-service
+      URL_AUTHOR: http://proxy/app2/authors
+    ports:
+      - "7071:7071"
+    expose:
+      - "7071"
     depends_on:
       - mongodb-service
+      - authors-service
+    labels:
+      - "traefik.http.routers.books.rule=PathPrefix(`/app1`)"
+      - "traefik.http.middlewares.books.stripprefix.prefixes=/app1"
+      - "traefik.http.routers.books.middlewares=books"
   mongodb-service:
     image: mongo:latest
     ports:
       - "27017:27017"
+    expose:
+      - "27017"
+    volumes:
+      - ./script.js:/docker-entrypoint-initdb.d/script.js:ro
